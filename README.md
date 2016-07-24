@@ -17,9 +17,9 @@ Contiene los ficheros de configuración de los agentes de Flume para la descarga
 
 ## Hive
 Contiene los scripts de creación de las diferentes tablas. Las tablas están separadas por empresa, existen tres tablas para cada empresa:
-  - <NOMBRE DE EMPRESA>: tabla con los tweets en bruto tal y como llegan de flume.
-  - <NOMBRE DE EMPRESA>lingpipe: tabla con sólo los datos relevantes de cada tweet y el resultado de realizar el análisis de sentimiento. 
-  - <NOMBRE DE EMPRESA>aggregated: tabla con los datos de tweets agregados por día.
+  - "NOMBRE DE EMPRESA": tabla con los tweets en bruto tal y como llegan de flume.
+  - "NOMBRE DE EMPRESA"lingpipe: tabla con sólo los datos relevantes de cada tweet y el resultado de realizar el análisis de sentimiento. 
+  - "NOMBRE DE EMPRESA"aggregated: tabla con los datos de tweets agregados por día.
 
 ## hive-corenlp 
 Proyecto maven hecho en JAVA para poder utilizar lingpipe como función hql. Para ello la clase com.utad.lingpipe.SentimentLingPipe ha implementado el interfaz UDF de Hive.
