@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Prediccion de bolsa en base a Twitter</title>
+
+    <!-- Bootstrap Core CSS -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link href="css/3-col-portfolio.css" rel="stylesheet">
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+</head>
+
+<body>
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+        <div class="container">
+            <!-- Brand and toggle get grouped for better mobile display -->
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="index.html">Inicio</a>
+            </div>
+            <!-- Collect the nav links, forms, and other content for toggling -->
+            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                <ul class="nav navbar-nav">
+                    <li>
+                        <a href="proyecto.html" >El proyecto</a>
+                    </li>
+                </ul>
+            </div>
+            <!-- /.navbar-collapse -->
+        </div>
+        <!-- /.container -->
+    </nav>
+
+    <!-- Page Content -->
+    <div class="container">
+
+        <!-- Page Header -->
+        <div class="row">
+            <div class="col-lg-12">
+                <h1 class="page-header">El proyecto
+                </h1>
+            </div>
+        </div>
+        <!-- /.row -->
+
+        <!-- Projects Row -->
+        <div class="row">
+            <div class="col-md-12 portfolio-item">
+                   
+	<h3 >Introducción</h3>  
+
+                <p>El objetivo del proyecto es intentar predecir el comportamiento en Bolsa de algunas empresas utilizando información de Twitter. Para escoger las empresas se han tenido en cuenta los siguientes criterios:</p>
+       <dl>
+		<dd>- Que sean empresas importantes: esto nos garantiza que en Twitter se genere un volumen de tweets suficiente y que coticen en el índice Promedio Industrial Dow Jones (DJIA). </dd>
+		<dd>- Que sean americanas: como vamos a realizar análisis de sentimiento sobre los tweets, es necesario que la mayoría de tweets sean en lengua inglesa.</dd>
+		<dd>- Que estén relacionadas con tecnología: estas empresas suelen tener mucha presencia y menciones en Twitter lo que nos aportará más cantidad de tweets para realizar el análisis.</dd>
+		<dd>- Que no tengan un número de tweets generados por robots o spawn: relacionados con empresas como Apple, Google, Amazon…  existen robots generando constantemente publicidad y “basura”, por lo que estas empresas no son una buena opción para realizar el estudio.</dd>
+                </dl>
+          
+<p>Teniendo en cuenta estos criterios se escogen como objeto del estudio: ORACLE, IBM y TESLA.</p>
+
+	<h3 >La arquitectura</h3>  
+		<a href="arquitectura.jpg">    
+			<img class="img-responsive" src="arquitectura.jpg" alt="Arquitectura" width="40%" height="40%" alt="Ver arquitectura">
+                    </a>
+<br/>
+<p>Para recuperar los datos bursátiles de las distintas empresas se ha desarrollado un programa en spark que recupera los datos usando el API de Yahoo y los almacena en Cassandra.</p> 
+
+<p>Para recolectar los tweets se han diseñado una serie de procesos en Flume utilizando su “source” para Twitter (com.cloudera.flume.source.TwitterSource). Se ha optado por un proceso Flume por empresa, para conseguir que Twitter nos entregue el mayor número de tweets posible, ya que cada proceso Flume tiene un usuario de Twitter diferente con el fin de salvar la restricción por volumen en el acceso a la API de Twitter. Los tweets se guardan en el HDFS segmentados por empresa en formato JSON. Dichos tweets se guardan en bruto y sin tratar para no perder ningún dato y así, tener todas las características originales a disposición en caso de querer cambiar el vector usado para la predicción.</p>
+
+<p>Sobre estos ficheros en el HDFS, se han montado tablas externas HIVE, una por empresa, que permiten lanzar fácilmente procesos MapReduce como sentencias hql.</p> 
+
+<p>Para realizar el análisis de sentimiento se ha utilizado la librería pública lingpipe (http://alias-i.com/lingpipe/). Durante el proyecto se probó también CoreNLP de Standford pero ésta era mucho más lenta y clasificaba la mayoría de tweets como negativos. Sobre la librería lingpipe se ha construido una pequeña función JAVA que implementa el interfaz de HIVE para desarrollo de funciones, así podemos usar lingpipe como una función más de hql. Cada día mediante una sentencia hql realizamos el análisis de sentimiento de cada tweet del día anterior y lo guardamos de nuevo en HIVE. Con una nueva sentencia hql agrupamos todos los tweets del día calculando el total de tweets, los positivos, negativos etc., tal y como se describió en el capítulo de características. El resultado, que es muy similar al vector de predicción se guarda de nuevo en HIVE.</p> 
+
+<p>Para realizar el proceso de aprendizaje se ha diseñado un proceso Spark que se ejecuta para cada empresa, ya que los modelos de predicción son exclusivos por empresa. Este proceso recoge todos los datos históricos y las cotizaciones conocidas y mediante Mllib de Spark obtiene tres modelos por empresa (uno por cada algoritmo de aprendizaje). Los modelos obtenidos se guardan en el HDFS para poder ser recuperados a la hora de realizar predicciones reales. Este proceso no está planificado, sino no que se lanza bajo demanda cuando queramos revisar los modelos.</p>
+
+<p>Para realizar las predicciones diarias, se ha realizado un proceso Spark que descarga los modelos de los tres algoritmos de predicción del HDFS, obtiene de HIVE los datos de los tres días anteriores, obtiene de Cassandra los datos bursátiles del día anterior y los pasa por los tres modelos para obtener las predicciones. Estos datos son de nuevo guardados en Cassandra.</p>
+
+<p>Como ejemplo de visualización, se ha realizado un proceso Spark que se lanza tras haber realizado las predicciones y que cruza los datos de las predicciones con los datos de la cotizaciones. El resultado del cruce se  almacena en dos tablas de Cassandra: una es el cruce diario de cotización y predicciones, mientras la otra es el agregado histórico que mide el número de aciertos y fallos (matriz de confusión). Para poder visualizar estos datos, se realiza una extracción de datos en formato csv que se deja en un servidor Apache. Mediante unas pocas páginas web que usan d3.js se ha creado alguna visualización. Como el volumen de datos a visualizar es pequeño, ya que los datos llegan muy agregados, y los datos sólo se actualizan una vez al día, se ha optado por esta arquitectura web que nos evita montar un Tomcat o similar para acceder a Cassandra en tiempo real.</p>            
+		<h3 >Más información</h3>  
+<p>El código está disponible en <a href="https://github.com/eferlo/Stake-Prediction" >GitHub</a></p>
+<p>Puedes escribirme a: <a href="mailto:eferlo@gmail.com" >eferlo@gmail.com</a></p>
+
+		</div>
+        </div>
+
+
+        <!-- Footer -->
+        <footer>
+            <div class="row">
+                <div class="col-lg-12">
+                    <p>Copyright &copy; Emilio Fernandez 2016</p>
+                </div>
+            </div>
+            <!-- /.row -->
+        </footer>
+
+    </div>
+    <!-- /.container -->
+
+    <!-- jQuery -->
+    <script src="js/jquery.js"></script>
+
+    <!-- Bootstrap Core JavaScript -->
+    <script src="js/bootstrap.min.js"></script>
+
+</body>
+
+</html>

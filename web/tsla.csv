@@ -1,0 +1,4 @@
+metodo,acierto_sube,acierto_baja,fallo_sube,fallo_baja
+decisiontree,10,4,0,3
+regression,9,6,1,1
+svm,5,5,5,2

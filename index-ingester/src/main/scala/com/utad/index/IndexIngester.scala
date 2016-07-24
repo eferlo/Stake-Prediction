@@ -1,5 +1,6 @@
 package com.utad.index
 
+
 import org.apache.spark.SparkConf
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext._     //importar los implicitos
@@ -21,6 +22,7 @@ object IndexIngester {
     //configuramos cassandra
     conf.set("spark.cassandra.connection.host", args(0));
     conf.set("spark.cassandra.connection.port",args(1));
+
 
     //creamos el contexto de spark
     val sc = new SparkContext(conf)
