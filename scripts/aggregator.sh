@@ -24,12 +24,12 @@ do
       spark-submit --class com.utad.ml.Predictor --master yarn ~/ml-prediction/target/ml-prediction-1.0-SNAPSHOT-jar-with-dependencies.jar 172.31.4.172 9042  thrift://ip-172-31-3-204.ec2.internal:9083 /user/centos/models/ $OUTPUT $FECHA
       
 #Reporing
-      spark-submit --class com.utad.ml.Report --master yarn ~/ml-prediction/target/ml-prediction-1.0-SNAPSHOT-jar-with-dependencies.jar 172.31.4.172 9042 $OUPUT
+      spark-submit --class com.utad.ml.Report --master yarn ~/ml-prediction/target/ml-prediction-1.0-SNAPSHOT-jar-with-dependencies.jar 172.31.4.172 9042 $OUTPUT
 
 #Extraccion de los datos de reporting a csv
       ~/cqlkit/bin/cql2csv --cqlshrc ~/cqlkit/bin/cqlshrc -q "select metodo,subeok as ACIERTO_SUBE,bajaok as ACIERTO_BAJA,subeko as FALLO_SUBE,bajako as FALLO_BAJA from stokedb.report where companyid='$OUTPUT'" > /var/www/html/"$i".csv
       
-      ~/cqlkit/bin/cql2csv --cqlshrc ~/cqlkit/bin/cqlshrc -q "select indexdate as fecha, change as cambio, decisiontree, regression, svm from stokedb.dailyreport where companyid='$OUPUT' limit 7" > /var/www/html/"$i"daily.csv
+      ~/cqlkit/bin/cql2csv --cqlshrc ~/cqlkit/bin/cqlshrc -q "select indexdate as fecha, change as cambio, decisiontree, regression, svm from stokedb.dailyreport where companyid='$OUTPUT' limit 7" > /var/www/html/"$i"daily.csv
    
    fi
 done
