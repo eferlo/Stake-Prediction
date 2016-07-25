@@ -61,7 +61,7 @@ CREATE TABLE IF NOT EXISTS stokedb.dailyreport
       regression int,
       svm    int,
       decisiontree int,
-      change   double,
+      change   text,
       PRIMARY KEY (companyid, indexdate)
 )WITH CLUSTERING ORDER BY (indexdate DESC);
 
